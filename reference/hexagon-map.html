@@ -1,0 +1,116 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>六边形架构速查地图</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .hexmap { display: grid; grid-template-columns: 1fr; gap: 0.8rem; margin: 1.5rem 0; }
+  @media (min-width: 760px) { .hexmap { grid-template-columns: 1fr 1.4fr 1fr; align-items: stretch; } }
+  .hexmap .side, .hexmap .core { border-radius: 12px; padding: 0.9rem 1.1rem; }
+  .hexmap .side { border: 2px solid var(--rule); background: var(--bg); }
+  .hexmap .core { border: 2.5px solid var(--accent); background: var(--card-bg); }
+  .hexmap h4 { margin: 0 0 0.2rem; font-size: 0.95rem; font-family: -apple-system, "PingFang SC", sans-serif; }
+  .hexmap .sub { margin: 0 0 0.6rem; font-size: 0.78rem; color: var(--ink-soft); font-family: -apple-system, "PingFang SC", sans-serif; }
+  .hexmap ul { margin: 0; padding-left: 1.1rem; font-size: 0.86rem; }
+  .hexmap li { margin: 0.25rem 0; }
+  .hexmap .port { color: var(--accent); font-weight: 600; }
+  table.ref { border-collapse: collapse; width: 100%; margin: 1.25rem 0; font-size: 0.9rem; }
+  table.ref th, table.ref td { border: 1px solid var(--rule); padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
+  table.ref th { background: var(--card-bg); font-family: -apple-system, "PingFang SC", sans-serif; font-size: 0.82rem; }
+  .ref-wrap { overflow-x: auto; }
+</style>
+
+<article>
+  <p class="kicker">Reference · 六边形架构</p>
+  <h1>六边形架构速查地图</h1>
+  <p class="lede">一页看懂端口与适配器。定义一律以 <a href="https://alistair.cockburn.us/hexagonal-architecture">Cockburn 2005 原文</a>为准。</p>
+
+  <h2 id="map">全景图</h2>
+  <div class="hexmap">
+    <div class="side">
+      <h4>驱动侧（左）· Driving</h4>
+      <p class="sub">发起对话的一方 —— 把应用从静止态唤醒</p>
+      <ul>
+        <li>REST/gRPC controller</li>
+        <li>CLI、GUI</li>
+        <li><strong>自动化测试</strong></li>
+        <li>定时任务 / 消息消费者</li>
+      </ul>
+    </div>
+    <div class="core">
+      <h4>六边形内部 · The Application</h4>
+      <p class="sub">领域 + 应用编排，技术无关</p>
+      <ul>
+        <li><span class="port">驱动端口</span>：应用<strong>提供</strong>的对话 —— 用例边界（如 <code>PlaceOrder</code>）</li>
+        <li>领域模型：实体 / 值对象 / 聚合 / 领域服务（DDD 课全套住这里）</li>
+        <li><span class="port">被驱动端口</span>：应用<strong>需要</strong>的对话（如 <code>OrderRepository</code>、<code>CustomerNotifier</code>）</li>
+      </ul>
+    </div>
+    <div class="side">
+      <h4>被驱动侧（右）· Driven</h4>
+      <p class="sub">被应用调用的一方 —— 提供答案或接收通知</p>
+      <ul>
+        <li>SQL 仓储适配器</li>
+        <li>SMTP / 短信适配器</li>
+        <li>Kafka 生产者适配器</li>
+        <li><strong>内存假仓储（测试替身）</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 id="defs">核心定义</h2>
+  <div class="ref-wrap">
+  <table class="ref">
+    <tr><th>术语</th><th>定义</th><th>判据 / 备注</th></tr>
+    <tr>
+      <td><strong>端口 Port</strong></td>
+      <td>一段「有目的的对话」的边界接口。名字取自操作系统端口：凡遵守协议者皆可插入。</td>
+      <td>按<strong>意图</strong>命名（<code>OrderRepository</code>），不按技术命名（<code>MySqlGateway</code>）。典型应用只有 2–4 个端口。</td>
+    </tr>
+    <tr>
+      <td><strong>适配器 Adapter</strong></td>
+      <td>在端口协议与某种具体技术之间做双向翻译的组件。</td>
+      <td>一个端口可插多个适配器。<strong>测试替身也是适配器</strong>，与生产适配器同级。</td>
+    </tr>
+    <tr>
+      <td><strong>驱动侧 Driving<br>（primary）</strong></td>
+      <td>发起对话、把应用从静止态唤醒的参与者及其适配器。</td>
+      <td>判据只有一条：<strong>谁发起</strong>。UI、测试、cron 全在此侧。</td>
+    </tr>
+    <tr>
+      <td><strong>被驱动侧 Driven<br>（secondary）</strong></td>
+      <td>被应用调用的参与者：要么给答案（仓储），要么收通知（邮件、事件）。</td>
+      <td>端口由应用<strong>拥有并定义</strong>，适配器实现它 —— 即 DDD 课的依赖倒置。</td>
+    </tr>
+    <tr>
+      <td><strong>配置式依赖<br>Configurable Dependency</strong></td>
+      <td>用哪个适配器，在应用<strong>外部</strong>（组装根）决定并插入，内部只见端口。</td>
+      <td>第 3 课展开。C++ 里即「构造函数收端口引用/智能指针」。</td>
+    </tr>
+  </table>
+  </div>
+
+  <h2 id="ddd">与 DDD 三层的映射</h2>
+  <div class="ref-wrap">
+  <table class="ref">
+    <tr><th>DDD 课的分层</th><th>六边形里的位置</th></tr>
+    <tr><td>领域层</td><td>六边形内部（核心）</td></tr>
+    <tr><td>应用层（编排/用例）</td><td>六边形内部；其对外 API 即<strong>驱动端口</strong></td></tr>
+    <tr><td>基础设施层</td><td>拆散了：全变成外侧的各个<strong>适配器</strong>，彼此无层级</td></tr>
+    <tr><td>表现层 / UI（分层图的顶层）</td><td><strong>降级为驱动适配器</strong>——与 DB 适配器地位对称</td></tr>
+  </table>
+  </div>
+
+  <h2 id="misreads">三个常见误读</h2>
+  <ul>
+    <li><strong>「六边形 = 6 个端口」</strong>——否。六只是画图方便：摆脱一维分层图，给端口留位置。Cockburn 自述典型端口数是 2–4 个。</li>
+    <li><strong>「就是分层架构换个画法」</strong>——否。六边形只有<strong>里/外</strong>之分，适配器之间没有层级，上/下方位没有意义。</li>
+    <li><strong>「测试是外挂的验证工具」</strong>——否。intent 原文把 automated test 与 users 并列为平等驱动者；测试适配器是一等公民。</li>
+  </ul>
+
+  <footer class="lesson-footer">
+    <p>出处：<a href="https://alistair.cockburn.us/hexagonal-architecture">Cockburn, "Hexagonal Architecture" (2005)</a> ·
+    <a href="https://www.amazon.com/Hexagonal-Architecture-Explained-Alistair-Cockburn/dp/173751978X"><em>Hexagonal Architecture Explained</em> (2024)</a> ·
+    C++ 可编译证据：<code>code/lesson1_check.cc</code></p>
+    <p><a href="../index.html">← 返回课程首页</a></p>
+  </footer>
+</article>

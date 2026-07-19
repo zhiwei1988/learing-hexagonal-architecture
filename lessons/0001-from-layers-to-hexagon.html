@@ -1,0 +1,241 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 1 课 · 从分层到六边形</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .fold { display: grid; grid-template-columns: 1fr; gap: 0.9rem; margin: 1.4rem 0; }
+  @media (min-width: 820px) { .fold { grid-template-columns: 1fr 1fr; } }
+  .fold .pane { border: 1px solid var(--rule); border-radius: 10px; padding: 0.9rem 1.1rem; background: var(--card-bg); }
+  .fold h4 { margin: 0 0 0.5rem; font-size: 0.88rem; font-family: -apple-system, "PingFang SC", sans-serif; }
+  .stack { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.85rem; text-align: center;
+           font-family: -apple-system, "PingFang SC", sans-serif; }
+  .stack .lay { border: 1.5px solid var(--rule); border-radius: 8px; padding: 0.4rem; background: var(--bg); }
+  .stack .lay.out { border-style: dashed; color: var(--ink-soft); }
+  .stack .arrow { color: var(--ink-soft); line-height: 1; }
+  .hexrow { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 0.4rem; align-items: center;
+            font-size: 0.8rem; text-align: center; font-family: -apple-system, "PingFang SC", sans-serif; }
+  .hexrow .ext { border: 1.5px dashed var(--rule); border-radius: 8px; padding: 0.35rem 0.3rem; color: var(--ink-soft); background: var(--bg); }
+  .hexrow .in { border: 2px solid var(--accent); border-radius: 10px; padding: 0.5rem 0.3rem; background: var(--bg); font-weight: 600; }
+  .hexrow .in small { display: block; font-weight: 400; color: var(--ink-soft); }
+</style>
+
+<article>
+  <p class="kicker">六边形架构 · 第 1 课</p>
+  <h1>从分层到六边形：你已经会一半</h1>
+  <p class="lede">DDD 课教会了你右半边（仓储端口、适配器、依赖倒置）。这一课补上分层图里根本不存在的<strong>左半边</strong>：UI、测试、定时任务——它们也是适配器。</p>
+
+  <div class="card">
+    <p><strong>你在地图上的位置</strong>：本课覆盖<a href="../reference/hexagon-map.html">速查地图</a>的「全景图」与「三个常见误读」。
+    你从 DDD 课带来的全部战术工具（实体/值对象/聚合/领域服务）原封不动地住进六边形<strong>内部</strong>。</p>
+  </div>
+
+  <h2>回顾检查</h2>
+  <p>先热身两题，考的是这门课要踩的地基（DDD 课第 7、8 课内容）。</p>
+  <div id="review"></div>
+
+  <h2>发明它是为了什么</h2>
+  <blockquote>
+    Allow an application to equally be driven by users, programs, automated test or batch scripts,
+    and to be developed and tested in isolation from its eventual run-time devices and databases.
+    <span class="zh">让应用可以被用户、程序、自动化测试或批处理脚本<strong>平等地</strong>驱动；并且脱离最终运行时的设备与数据库，独立开发、独立测试。</span>
+    <cite>—— Alistair Cockburn, <a href="https://alistair.cockburn.us/hexagonal-architecture">"Hexagonal Architecture" (2005)</a></cite>
+  </blockquote>
+  <p>注意 intent 里没有一个字提「分层」或「解耦」。它提的是<strong>平等（equally）</strong>：测试和用户是同级驱动者。这就是六边形与你熟悉的分层图的分水岭。</p>
+
+  <h2>把 UI 从顶层拽下来</h2>
+  <p>你在 DDD 课画的分层图是一维的：UI 在上，DB 在下。六边形把这张图<strong>对折</strong>——上下两端捏到一起，全都放到「外面」：</p>
+
+  <div class="fold">
+    <div class="pane">
+      <h4>DDD 课的分层图（一维）</h4>
+      <div class="stack">
+        <div class="lay out">表现层 / UI</div>
+        <div class="arrow">↓</div>
+        <div class="lay">应用层（编排）</div>
+        <div class="arrow">↓</div>
+        <div class="lay">领域层</div>
+        <div class="arrow">↑ 实现端口</div>
+        <div class="lay out">基础设施层（SQL、Kafka…）</div>
+      </div>
+    </div>
+    <div class="pane">
+      <h4>六边形（只有里/外）</h4>
+      <div class="hexrow">
+        <div class="ext">REST<br>CLI<br><strong>测试</strong><br>cron</div>
+        <div class="in">应用 + 领域<br><small>驱动端口 ⇢ 内部 ⇢ 被驱动端口</small></div>
+        <div class="ext">SQL<br>SMTP<br>Kafka<br><strong>内存假仓储</strong></div>
+      </div>
+      <p style="font-size:0.82rem; color:var(--ink-soft); margin:0.6rem 0 0;">左：驱动侧（发起对话）· 右：被驱动侧（被调用）。适配器之间<strong>没有层级</strong>，上下方位无意义。</p>
+    </div>
+  </div>
+
+  <p>被驱动侧（右）你已滚瓜烂熟：<code>OrderRepository</code> 是端口，<code>SqlOrderRepository</code> 是适配器，依赖倒置。<strong>新增量全在左边</strong>：应用自己也经由端口被外界调用——应用层用例的对外 API 就是<strong>驱动端口</strong>，而 REST controller 只是插在这个端口上的一个适配器。换成 CLI、换成测试，端口不变。</p>
+
+  <h2>两侧唯一的判据：谁发起对话</h2>
+  <blockquote>
+    A primary actor is an actor that drives the application (takes it out of quiescent state to perform
+    one of its advertised functions). A secondary actor is one that the application drives, either to get
+    answers from or to merely notify.
+    <span class="zh">主动（驱动）参与者：把应用从静止态唤醒、让它执行既定功能的一方。被动（被驱动）参与者：被应用调用的一方——要么向它要答案，要么只是通知它。</span>
+    <cite>—— 同上</cite>
+  </blockquote>
+  <p>判断口诀：<strong>谁先开口</strong>。发起调用的在左边；被调用的在右边。数据库「重要」不代表它驱动谁——它永远在等应用开口，所以是被驱动侧。</p>
+
+  <h2>测试是一等适配器——C++ 证据</h2>
+  <p>下面是 <code>code/lesson1_check.cc</code> 的核心（clang / <code>-std=c++20 -Wall -Wextra</code> 零告警，断言全绿）。看两个不同的驱动者插进<strong>同一个</strong>驱动端口：</p>
+
+<pre><code>// Driving port: the conversation the app OFFERS. Named after intent, not tech.
+struct PlaceOrder {
+  virtual int execute(const PlaceOrderCommand&amp;) = 0;
+  virtual ~PlaceOrder() = default;
+};
+
+// Driver #1: an HTTP-ish controller — just a translator into the port's language.
+int fake_http_controller(PlaceOrder&amp; app, const std::string&amp; sku, int qty) {
+  return app.execute(PlaceOrderCommand{sku, qty});
+}
+
+// Driver #2: the test itself — same port, same rank, no controller needed.
+const int id_from_test = app.execute(PlaceOrderCommand{"SKU-42", 3});
+const int id_from_http = fake_http_controller(app, "SKU-7", 1);</code></pre>
+
+  <p>右侧同理：测试用的 <code>InMemoryOrderRepository</code> 和生产的 <code>SqlOrderRepository</code> 插同一个被驱动端口——<strong>测试替身不是二等公民，它就是一个适配器</strong>。而 <code>PlaceOrderService</code> 全文没有出现 HTTP、SQL、SMTP、test 任何一个词。</p>
+
+  <div class="card">
+    <p><strong>三个常见误读</strong>（评审时的高频弹药，详见<a href="../reference/hexagon-map.html#misreads">速查地图</a>）：</p>
+    <ul>
+      <li>「六边形 = 6 个端口」？否——六只是给端口留画图位置，摆脱一维分层图；Cockburn 自述典型端口数 <strong>2–4 个</strong>。</li>
+      <li>「分层架构换个画法」？否——只有里/外之分，适配器之间无层级。</li>
+      <li>「UI 层在最上面」？六边形里 UI 与 DB <strong>地位对称</strong>，都在外面。</li>
+    </ul>
+  </div>
+
+  <h2>练一练：这个东西住哪</h2>
+  <p>电商订单系统的十个零件，判断各自的位置。</p>
+  <div id="sort"></div>
+
+  <h2>试一试</h2>
+  <div id="quiz"></div>
+
+  <h2>下一课 &amp; 主读物</h2>
+  <p>下一课：<strong>端口的粒度与命名</strong>——为什么典型应用只有 2–4 个端口，「一个仓储一个端口」对不对。</p>
+  <p>主读物（一手资料，优先读）：<a href="https://alistair.cockburn.us/hexagonal-architecture">Cockburn 2005 原文</a>（20 分钟）。想要成书，买 <a href="https://www.amazon.com/Hexagonal-Architecture-Explained-Alistair-Cockburn/dp/173751978X"><em>Hexagonal Architecture Explained</em>（2024）</a>——发明者本人写的权威版，后面测试策略课会用到它。</p>
+
+  <footer class="lesson-footer">
+    <p>本课共 <strong>3 个计分区</strong>：回顾检查（2 题）、练一练（10 题）、试一试（5 题）。
+    做完告诉我<strong>答错了哪几道、当时选的是哪个</strong>，全对就说「全对」。</p>
+    <p>任何一处没讲透——直接在会话里问我，我是你的老师，这页只是讲义。</p>
+    <p><a href="../index.html">课程首页</a> · <a href="../reference/hexagon-map.html">六边形速查地图</a> · 代码：<code>code/lesson1_check.cc</code></p>
+  </footer>
+</article>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/categorize.js"></script>
+<script>
+  renderQuiz(document.getElementById("review"), [
+    {
+      stem: "OrderRepository 这个接口（不是它的 SQL 实现）应该声明在哪一层？",
+      options: [
+        "基础设施层——它是给数据库用的",
+        "领域层——领域定义自己需要什么，实现在外面（依赖倒置）",
+        "应用层——由编排代码决定怎么存",
+      ],
+      answer: 1,
+      explain: "DDD 课第 7 课的地基：端口由内部拥有并定义，适配器在外面实现它。六边形架构给这件事起了正式名字——被驱动端口。",
+    },
+    {
+      stem: "「把领域事件真正送进 Kafka」的那段代码，归哪里？",
+      options: [
+        "应用层——发布事件是编排决策",
+        "领域层——事件是领域概念",
+        "基础设施层——EventPublisher 端口的适配器实现",
+      ],
+      answer: 2,
+      explain: "老朋友了：『编排决定发』是应用层，『真送进 Kafka 的机制』是适配器。本课起它有了新名字：被驱动适配器。",
+    },
+  ], {
+    perfect: "地基稳。这两样东西马上要换上六边形的正式名字。",
+    imperfect: "先回 DDD 课第 7 课把这条线补稳——本课全部建在它上面。",
+  });
+
+  renderCategorize(document.getElementById("sort"), {
+    buckets: ["驱动适配器", "驱动端口", "六边形内部", "被驱动端口", "被驱动适配器"],
+    items: [
+      { text: "接收 POST /orders 请求、转手调用用例的 REST controller", bucket: 0,
+        explain: "它把 HTTP 的语言翻译成驱动端口的语言——驱动侧的适配器。" },
+      { text: "PlaceOrder 接口：execute(PlaceOrderCommand) → OrderId", bucket: 1,
+        explain: "应用对外提供的对话边界，按意图命名——这就是驱动端口。" },
+      { text: "Order::confirm() 里校验不变量的代码", bucket: 2,
+        explain: "领域逻辑，技术无关，住在六边形内部。DDD 课的全部战术模式都在这。" },
+      { text: "OrderRepository 接口（save / next_id）", bucket: 3,
+        explain: "应用需要的对话，由内部定义、外部实现——被驱动端口。" },
+      { text: "SqlOrderRepository：用 PostgreSQL 实现 save()", bucket: 4,
+        explain: "被驱动端口的一个生产适配器。" },
+      { text: "一条 GoogleTest 用例，直接调 app.execute(cmd) 并断言返回值", bucket: 0,
+        explain: "陷阱题。测试发起对话、唤醒应用——它是驱动适配器，与 REST controller 同级。" },
+      { text: "测试里用的 InMemoryOrderRepository（存进 vector）", bucket: 4,
+        explain: "陷阱题。测试替身不是二等公民：它实现被驱动端口，就是一个被驱动适配器。" },
+      { text: "CustomerNotifier 接口：order_placed(order_id)", bucket: 3,
+        explain: "应用要通知外界但不关心怎么通知——被驱动端口（notify 型，不要答案）。" },
+      { text: "SmtpNotifier：真的发邮件", bucket: 4,
+        explain: "CustomerNotifier 端口的生产适配器。" },
+      { text: "每晚触发对账用例的 cron 任务", bucket: 0,
+        explain: "谁先开口谁在左边：cron 把应用从静止态唤醒——驱动适配器。intent 里的 batch scripts 说的就是它。" },
+    ],
+    perfect: "十个零件全部归位——「谁发起对话」这把尺子你已经拿稳了。",
+    imperfect: "错的那条重读解释：判据只有一个——谁先开口。",
+  });
+
+  renderQuiz(document.getElementById("quiz"), [
+    {
+      stem: "Cockburn 发明六边形架构，intent 原文强调的核心是什么？",
+      options: [
+        "让系统按业务能力拆成多个可独立部署的组件",
+        "让用户、程序、测试、批处理能平等驱动应用，且脱离设备与数据库独立开发测试",
+        "让依赖关系全部指向领域层，保证领域纯净",
+      ],
+      answer: 1,
+      explain: "原文关键词是 equally driven 与 in isolation。依赖朝里只是实现手段，微服务更是完全不相干。",
+    },
+    {
+      stem: "六边形架构里，图形界面（GUI）的地位是？",
+      options: [
+        "顶层——它离用户最近，调用方向从它开始",
+        "六边形内部——交互逻辑也是业务的一部分",
+        "外部的驱动适配器——与数据库适配器地位对称",
+      ],
+      answer: 2,
+      explain: "这是与分层图的分水岭：UI 被拽下神坛，和 SQL 适配器一样只是插在端口上的可换件。",
+    },
+    {
+      stem: "判断一个参与者属于驱动侧还是被驱动侧，唯一的判据是？",
+      options: [
+        "它是否发起对话、把应用从静止态唤醒",
+        "它是输入数据还是输出数据",
+        "它离用户近还是离基础设施近",
+      ],
+      answer: 0,
+      explain: "谁先开口。输入/输出会误导：Kafka 消费者『输入』数据却是驱动侧，通知邮件『输出』却是被驱动侧。",
+    },
+    {
+      stem: "以下哪个端口命名最符合「端口 = 有目的的对话」？",
+      options: [
+        "MySqlPort——明确指出用什么存",
+        "DataAccessLayer——概括所有数据操作",
+        "ForPlacingOrders / OrderRepository——按对话意图命名",
+      ],
+      answer: 2,
+      explain: "端口按意图命名，技术只出现在适配器里。Cockburn 书里甚至推荐 for + 动名词的句式（ForPlacingOrders）。",
+    },
+    {
+      stem: "为什么说「测试替身（mock/fake）是一等公民」？",
+      options: [
+        "因为测试代码量常常超过生产代码",
+        "因为它实现的端口和生产适配器实现的是同一个，模式上完全同级",
+        "因为不写测试替身就无法做单元测试",
+      ],
+      answer: 1,
+      explain: "InMemoryOrderRepository 与 SqlOrderRepository 插的是同一个被驱动端口。六边形不是『顺便可测』，可测性写在 intent 第一句里。",
+    },
+  ]);
+</script>
