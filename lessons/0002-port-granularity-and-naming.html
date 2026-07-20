@@ -1,0 +1,241 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 2 课 · 端口的粒度与命名</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .port-grid { display: grid; gap: 0.75rem; margin: 1.25rem 0; }
+  @media (min-width: 700px) { .port-grid { grid-template-columns: 1fr 1fr; } }
+  .port-card { border: 1px solid var(--rule); border-radius: 10px; padding: 0.85rem 1rem; background: var(--card-bg); }
+  .port-card h4 { margin: 0 0 0.35rem; font-size: 0.9rem; font-family: -apple-system, "PingFang SC", sans-serif; }
+  .port-card.bad { border-color: var(--bad); }
+  .port-card.good { border-color: var(--good); }
+  .port-card ul { margin: 0.35rem 0 0; padding-left: 1.1rem; font-size: 0.88rem; }
+  .axis { font-size: 0.85rem; color: var(--ink-soft); margin: 0.4rem 0 0; }
+</style>
+
+<article>
+  <p class="kicker">六边形架构 · 第 2 课</p>
+  <h1>端口的粒度与命名：一段有目的的对话</h1>
+  <p class="lede">第 1 课你分清了左右。这一课回答评审时最常被追问的两句：
+  <strong>这个接口算不算一个端口？</strong>以及<strong>它该叫什么？</strong></p>
+
+  <div class="card">
+    <p><strong>你在地图上的位置</strong>：本课钉死<a href="../reference/hexagon-map.html#defs">速查地图 · 核心定义</a>里
+    「端口 = 有目的的对话」与「典型 2–4 个」两格，并补上<a href="../reference/port-conversations.html">端口对话速查</a>。
+    上一课唯一软点——「通知型」被驱动端口——课首复验。</p>
+  </div>
+
+  <h2>回顾检查</h2>
+  <p>两题：一道钉「仅仅通知」；一道钉「谁先开口」。选项字数对齐，别靠长短猜。</p>
+  <div id="review"></div>
+
+  <h2>端口是什么：一段有目的的对话</h2>
+  <blockquote>
+    A port identifies a purposeful conversation. … The protocol for a port is given by the
+    purpose of the conversation between the two devices.
+    <span class="zh">端口标识一段<strong>有目的的对话</strong>。……端口的协议，由双方对话的<strong>目的</strong>给出。</span>
+    <cite>—— Alistair Cockburn, <a href="https://alistair.cockburn.us/hexagonal-architecture">"Hexagonal Architecture" (2005)</a></cite>
+  </blockquote>
+  <p>操作系统端口、电子设备插口——凡遵守协议者皆可插入。协议谈的是<strong>目的</strong>（存订单、算税、通知订阅者），
+  不是电缆材料（MySQL、REST、SMTP）。技术只出现在适配器里。</p>
+  <p>Cockburn 近年演讲里的命名句式：<code>For_doing_something</code>
+  （见 <a href="https://alistaircockburn.com/Hexagonal%20Budapest%2023-05-18.pdf">Budapest 2023 幻灯</a>）。
+  DDD 课你用的 <code>OrderRepository</code> 同样合格——名词角色名，意图清晰。
+  两种风格都行；<strong>按技术命名一律不合格</strong>。</p>
+
+  <h2>粒度：两极端都错，中间那一小撮才对</h2>
+  <blockquote>
+    What exactly a port is and isn't is largely a matter of taste. At the one extreme, every use
+    case could be given its own port, producing hundreds of ports… Alternatively, one could imagine
+    merging all primary ports and all secondary ports so there are only two ports… My selection tends
+    to favor a small number, two, three or four ports…
+    <span class="zh">端口划到哪是品味问题。一极端：每个用例一个端口，上百个；另一极端：左合并成一个、右合并成一个，只剩两个。
+    我倾向少量——两、三、四个。</span>
+    <cite>—— 同上，"How Many Ports?"</cite>
+  </blockquote>
+
+  <div class="port-grid">
+    <div class="port-card bad">
+      <h4>过细 · 按用例爆炸</h4>
+      <ul>
+        <li><code>PlaceOrderPort</code></li>
+        <li><code>CancelOrderPort</code></li>
+        <li><code>AmendOrderPort</code></li>
+        <li>…上百个「端口」</li>
+      </ul>
+      <p class="axis">对话目的其实都是「操作订单」——拆碎了只剩函数清单。</p>
+    </div>
+    <div class="port-card bad">
+      <h4>过粗 · 按左右两桶</h4>
+      <ul>
+        <li><code>LeftSideApi</code>（所有驱动）</li>
+        <li><code>RightSideApi</code>（所有被驱动）</li>
+      </ul>
+      <p class="axis">丢掉了「对话目的」——评审时说不清系统在跟外界谈什么。</p>
+    </div>
+    <div class="port-card good" style="grid-column: 1 / -1;">
+      <h4>合适 · 按自然对话（Cockburn 天气系统例：4 个）</h4>
+      <ul>
+        <li>采集气象信息 · 管理 · 通知订阅者 · 读写订阅者数据</li>
+        <li>咖啡机例：用户 · 配方库 · 出货装置 · 投币盒</li>
+      </ul>
+      <p class="axis">判据：换掉一种技术，这段对话还在吗？在 → 它是端口；不在 → 那是适配器细节。</p>
+    </div>
+  </div>
+
+  <p>第 1 课提过「六边形 ≠ 6 个端口」——六只是画图留位。真正该数的是<strong>有目的的对话</strong>，通常 2–4 段。</p>
+
+  <h2>一条绿色断言：一对话，两技术</h2>
+  <p><code>code/lesson2_ports.cc</code>（clang / <code>-std=c++20 -Wall -Wextra</code> 零告警）。
+  应用只认识 <code>ForStoringOrders</code>；内存适配器与「伪文件」适配器先后插入——应用源码一字未改：</p>
+
+<pre><code>struct ForStoringOrders {                 // purpose, not tech
+  virtual void save(const OrderRecord&amp;) = 0;
+  virtual OrderRecord load(int id) = 0;
+};
+
+struct ForRecordingAudit {                // merely notify — no answer
+  virtual void record(const std::string&amp; event) = 0;
+};
+
+// Adapter A and Adapter B both implement ForStoringOrders.
+// Had we named ports ForMysql / ForFile, the app would depend on
+// two conversations for one purpose — the smell this lesson rejects.
+PlaceOrderApp app_a(in_memory_store, audit);
+PlaceOrderApp app_b(fake_file_store, audit);</code></pre>
+
+  <p><code>ForRecordingAudit</code> 是通知型被驱动端口：应用开口、外界接收、不要答案——
+  与第 1 课 <code>CustomerNotifier</code> 同槽，只是换了领域词，避免靠记题蒙对。</p>
+
+  <h2>练一练：这段该不该独立成端口？</h2>
+  <p>电商履约系统里的候选接口。判断它属于哪一类。</p>
+  <div id="sort"></div>
+
+  <h2>试一试</h2>
+  <div id="quiz"></div>
+
+  <h2>下一课 &amp; 主读物</h2>
+  <p>下一课：<strong>配置式依赖与组装根</strong>——谁在 <code>main()</code> 里把适配器插进端口，C++ 里所有权怎么握。</p>
+  <p>主读物：重读 Cockburn 2005 原文的
+  <a href="https://alistair.cockburn.us/hexagonal-architecture">"How Many Ports?"</a> 两段（5 分钟）；
+  对照天气系统 / 咖啡机的「自然端口」划分。成书版见
+  <a href="https://www.amazon.com/Hexagonal-Architecture-Explained-Alistair-Cockburn/dp/173751978X"><em>Hexagonal Architecture Explained</em></a> 相关章节。</p>
+
+  <footer class="lesson-footer">
+    <p>本课共 <strong>3 个计分区</strong>：回顾检查（2 题）、练一练（8 题）、试一试（5 题）。
+    做完告诉我<strong>答错了哪几道、当时选的是哪个</strong>，全对就说「全对」。</p>
+    <p>任何一处没讲透——直接在会话里问我，我是你的老师，这页只是讲义。</p>
+    <p><a href="../index.html">课程首页</a> ·
+       <a href="../reference/port-conversations.html">端口对话速查</a> ·
+       <a href="../reference/hexagon-map.html">六边形速查地图</a> ·
+       代码：<code>code/lesson2_ports.cc</code> ·
+       <a href="0001-from-layers-to-hexagon.html">← 第 1 课</a></p>
+  </footer>
+</article>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/categorize.js"></script>
+<script>
+  renderQuiz(document.getElementById("review"), [
+    {
+      stem: "应用调用 MetricsSink::emit(counter) 打点，不读返回值。这个端口属于？",
+      options: [
+        "驱动端口——应用主动往外推送指标",
+        "被驱动端口——应用开口去通知外界",
+        "六边形内部——打点是业务规则本身",
+      ],
+      answer: 1,
+      explain: "Cockburn 原文：secondary actor 是应用驱动的一方，『要么要答案，要么仅仅通知（merely notify）』。emit 不要答案——教科书级的被驱动端口。词里的『主动推送』是语感陷阱，判据仍是谁先开口。",
+    },
+    {
+      stem: "判断驱动侧还是被驱动侧，唯一站得住的尺子是？",
+      options: [
+        "数据往里流还是往外流",
+        "谁先开口、把应用从静止唤醒",
+        "接口名字像不像 Repository",
+      ],
+      answer: 1,
+      explain: "第 1 课判据原封不动。方向会骗人：通知往外走仍是被驱动；Kafka 消费者往里灌数据却是驱动侧。",
+    },
+  ], {
+    perfect: "通知型软点越过词义干扰了。进入本课主线。",
+    imperfect: "错在『通知=驱动』语感的，重读解释里的 merely notify；错在方向的，回第 1 课『谁先开口』。",
+  });
+
+  renderCategorize(document.getElementById("sort"), {
+    buckets: ["独立端口（好）", "应并入已有端口", "适配器（不是端口）", "按技术命名（坏）"],
+    items: [
+      { text: "ForFulfillingOrders——安排拣货、发货、签收的那段对话", bucket: 0,
+        explain: "一段清晰的业务对话目的。换掉 HTTP/CLI/测试，对话还在——独立端口。" },
+      { text: "ForMysqlOrders——专门对接 MySQL 的存取接口", bucket: 3,
+        explain: "技术进了端口名。应叫 ForStoringOrders（或 OrderRepository），MySQL 只是适配器。" },
+      { text: "SqlOrderRepository：用 libpq 实现 save/load", bucket: 2,
+        explain: "这是插在存储端口上的生产适配器，不是又一个端口。" },
+      { text: "CancelOrderUseCasePort——与 PlaceOrderPort、AmendOrderPort 并列的第三个『端口』", bucket: 1,
+        explain: "过细极端：取消/下单/改单通常是同一段『操作订单』对话里的几个操作，并进驱动端口，别每个用例一个端口。" },
+      { text: "ForNotifyingShipments——发货后通知客户/下游（不要答案）", bucket: 0,
+        explain: "通知型被驱动对话，目的独立于『存订单』——该独立。SMTP/Kafka 是它的适配器。" },
+      { text: "PostgresGateway + RedisGateway——按数据库品牌拆的两个『端口』", bucket: 3,
+        explain: "两个品牌是两种适配器技术。若对话目的相同，只该有一个存储类端口。" },
+      { text: "InMemoryOrderStore——测试里 vector 实现的存取", bucket: 2,
+        explain: "测试替身 = 被驱动适配器，与 SqlOrderRepository 同级，插同一个 ForStoringOrders。" },
+      { text: "RightSidePort——把仓储、通知、支付全塞进一个大接口", bucket: 1,
+        explain: "过粗极端：左右两桶。评审时说不清系统在谈哪几段话；按自然对话拆开。" },
+    ],
+    perfect: "粒度尺子拿稳了：按对话目的切，不按用例数、不按技术品牌。",
+    imperfect: "错的那条对照四类标签重读——『换技术后对话还在吗』是最快的自检。",
+  });
+
+  renderQuiz(document.getElementById("quiz"), [
+    {
+      stem: "Cockburn 说端口标识的是什么？",
+      options: [
+        "一种可替换的外部技术选型",
+        "一段有目的的双方对话",
+        "一层与基础设施对齐的目录",
+      ],
+      answer: 1,
+      explain: "原文：A port identifies a purposeful conversation。技术是适配器的事；目录结构是后果不是定义。",
+    },
+    {
+      stem: "他自述倾向的端口数量大约是？",
+      options: [
+        "必须正好六个，对应六边形",
+        "两到四个，少而清晰",
+        "每个公开用例至少一个",
+      ],
+      answer: 1,
+      explain: "原文：two, three or four（four is most I have encountered）。六只是画图几何，不是计数约束。",
+    },
+    {
+      stem: "ForStoringOrders 上同时挂 Sql 与 File 两个类，说明了？",
+      options: [
+        "一个端口允许多个适配器插入",
+        "存储必须拆成两个独立端口",
+        "文件适配器应升格为驱动端口",
+      ],
+      answer: 0,
+      explain: "lesson2_ports.cc 的证据：对话一个，技术多个。拆成 ForMysql/ForFile 才是把适配器误当成端口。",
+    },
+    {
+      stem: "下列哪个命名最不合格？",
+      options: [
+        "OrderRepository（角色/意图）",
+        "ForCalculatingTaxes（目的句式）",
+        "KafkaProducerPort（技术贴牌）",
+      ],
+      answer: 2,
+      explain: "Kafka 是电缆材料。目的若是『发布领域事件』，端口应叫 ForPublishingEvents / EventPublisher；Kafka 只出现在适配器类名里。",
+    },
+    {
+      stem: "评审时最快的端口自检问题是？",
+      options: [
+        "这个接口的方法是不是都是 async？",
+        "换掉一种外部技术，这段对话还在吗？",
+        "这个接口是否放在 infrastructure 目录？",
+      ],
+      answer: 1,
+      explain: "对话还在 → 端口边界站得住；对话随技术消失 → 你把适配器细节抬进了端口。目录位置是组织后果，不是判据。",
+    },
+  ]);
+</script>

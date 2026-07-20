@@ -27,11 +27,14 @@
    （正解被驱动端口）——是「Notifier/通知」词义语感干扰,非判据坏（试一试 Q3「通知=被驱动」
    已判对,同卷 SmtpNotifier=被驱动适配器也对,自相矛盾即证据）。详见 learning-records/0002。
    词汇表 +3:端口、适配器、驱动/被驱动侧（驱动/被驱动的「通知型端口」格待第 2 课复验）。
-2. 端口的粒度与命名：port = purposeful conversation、典型 2–4 个端口、按用例不按技术
-   **课首回顾检查确定放**:一道「通知型/fire-and-forget 被驱动端口」间隔重复题(换领域,
-   如 AuditLog/MetricsSink,别用 CustomerNotifier),验 0002 软点越过词义干扰。可引 Cockburn
-   secondary actor 定义原话 "...or to merely notify" 钉死这个点。
+2. ✅ 端口的粒度与命名（0002）— 回顾 2/2、练一练 5/8、试一试 5/5（2026-07-20）。
+   主线（purposeful conversation / 2–4 / 意图命名）立住。软点：练一练第 3/6/7 题
+   把「名字含技术词」与「按技术命名（坏）」绑死——`SqlOrderRepository`、`InMemoryOrderStore`
+   误判为坏命名，而 `PostgresGateway+RedisGateway` 当端口时反判成适配器。
+   实为「技术词贴端口才坏、贴适配器合格」的另一半未立住。详见 learning-records/0003。
+   课首回顾（第 3 课）确定放：技术类名出现在哪一侧才合格。
 3. 配置式依赖与组装根：手工 DI、main() 组装、C++ 里的所有权与生命周期
+   **课首回顾检查确定放**:「`PostgresOrderStore` 这个类名——端口还是适配器？」验 0003。
 4. 测试策略：驱动侧进、被驱动侧换替身；test-to-test-double 矩阵（书第 6 章方向）
 5. 对比评审课：Hexagonal vs Clean vs Onion vs 传统分层（mission「评审」落点）
 6. 迁移弧（多课）：接缝识别 → 特征测试 → 抽第一个端口 → 绞杀式推进

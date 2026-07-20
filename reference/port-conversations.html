@@ -1,0 +1,89 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>端口对话速查</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  table.ref { border-collapse: collapse; width: 100%; margin: 1.25rem 0; font-size: 0.9rem; }
+  table.ref th, table.ref td { border: 1px solid var(--rule); padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
+  table.ref th { background: var(--card-bg); font-family: -apple-system, "PingFang SC", sans-serif; font-size: 0.82rem; }
+  .ref-wrap { overflow-x: auto; }
+  .good { color: var(--good); }
+  .bad { color: var(--bad); }
+</style>
+
+<article>
+  <p class="kicker">Reference · 六边形架构</p>
+  <h1>端口对话速查</h1>
+  <p class="lede">端口 = 一段有目的的对话。粒度与命名的压缩版，供评审时快速对照。
+  出处：<a href="https://alistair.cockburn.us/hexagonal-architecture">Cockburn 2005</a>。</p>
+
+  <h2 id="def">一句话</h2>
+  <p><strong>端口标识一段有目的的对话</strong>；协议由对话目的给出；技术只住在适配器里。
+  典型应用只有 <strong>2–4</strong> 个端口。</p>
+
+  <h2 id="name">命名</h2>
+  <div class="ref-wrap">
+  <table class="ref">
+    <tr><th>风格</th><th>示例</th><th>判定</th></tr>
+    <tr>
+      <td>目的句式（Cockburn）</td>
+      <td><code>ForStoringOrders</code> · <code>ForCalculatingTaxes</code> · <code>ForNotifyingShipments</code></td>
+      <td class="good">合格</td>
+    </tr>
+    <tr>
+      <td>角色/意图（DDD 惯用）</td>
+      <td><code>OrderRepository</code> · <code>EventPublisher</code> · <code>CustomerNotifier</code></td>
+      <td class="good">合格</td>
+    </tr>
+    <tr>
+      <td>技术贴牌</td>
+      <td><code>MySqlPort</code> · <code>KafkaProducerPort</code> · <code>RedisGateway</code>（当端口名时）</td>
+      <td class="bad">不合格——技术名留给适配器类</td>
+    </tr>
+  </table>
+  </div>
+
+  <h2 id="grain">粒度两极端</h2>
+  <div class="ref-wrap">
+  <table class="ref">
+    <tr><th>极端</th><th>样子</th><th>问题</th></tr>
+    <tr>
+      <td>过细</td>
+      <td>每个用例一个端口（上百个）</td>
+      <td>对话被拆成函数清单，丢失「目的」聚合</td>
+    </tr>
+    <tr>
+      <td>过粗</td>
+      <td>左一个 API、右一个 API</td>
+      <td>说不清系统在跟外界谈哪几段话</td>
+    </tr>
+    <tr>
+      <td>合适</td>
+      <td>按自然对话：2–4 段</td>
+      <td>换技术后对话仍在 = 边界站得住</td>
+    </tr>
+  </table>
+  </div>
+
+  <h2 id="examples">Cockburn 的「自然端口」例</h2>
+  <ul>
+    <li><strong>天气预警</strong>：采集气象 · 管理 · 通知订阅者 · 订阅者数据（4）</li>
+    <li><strong>咖啡机</strong>：用户 · 配方库 · 出货装置 · 投币盒（4）</li>
+    <li><strong>最简计税</strong>：算税（驱动）· 取税率（被驱动）（2）</li>
+  </ul>
+
+  <h2 id="check">30 秒自检</h2>
+  <ol>
+    <li>换掉一种外部技术，这段对话还在吗？——不在 → 你把适配器抬成了端口。</li>
+    <li>一个端口上能否想象出 ≥2 个适配器（含测试替身）？——不能 → 边界可能贴技术贴太紧。</li>
+    <li>技术词出现在<strong>适配器</strong>类名上合格（<code>SqlOrderRepository</code>）；出现在<strong>端口</strong>名上不合格。
+  把两个数据库品牌拆成两个「端口」= 把适配器抬成了端口。</li>
+  <li>通知型（不要答案）仍是<strong>被驱动</strong>端口——<em>merely notify</em>。</li>
+  </ol>
+
+  <footer class="lesson-footer">
+    <p>配套课：<a href="../lessons/0002-port-granularity-and-naming.html">第 2 课 · 端口的粒度与命名</a> ·
+    代码证据：<code>code/lesson2_ports.cc</code></p>
+    <p><a href="../index.html">← 返回课程首页</a> · <a href="hexagon-map.html">六边形速查地图</a></p>
+  </footer>
+</article>
