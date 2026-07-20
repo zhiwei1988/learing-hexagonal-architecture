@@ -40,9 +40,12 @@
    ② 主目标误绑 S5；③ mock 六边形测 REST 当成搞反、绕过端口 assert MIME 反当成 S3。
    详见 learning-records/0005。词汇表 +2: 测试线束/替身、S2。
    **第 5 课课首回顾确定放**：主目标=S2≠S5；FIT/Cucumber+mock=S2。
-5. 对比评审课：Hexagonal vs Clean vs Onion vs 传统分层（mission「评审」落点）
+5. ✅ 对比评审课（0005）— 回顾 2/2、练一练 8/8、试一试 5/5（2026-07-20）。
+   四种观察轴与「源码依赖 + S2 证据」主线立住；第 4 课的 S2/S5、测试线束软点一并结案。
+   能接受简单 CRUD 继续清楚分层，没有把模式当成熟度阶梯。详见 learning-records/0006。
+   词汇表 +1：Dependency Rule；Mission 的「能讲清、能评审」已有测验证据。
 6. 迁移弧（多课）：接缝识别 → 特征测试 → 抽第一个端口 → 绞杀式推进
-   （mission「改造现有项目」落点；**开课前先问真实项目**）
+   （mission「改造现有项目」落点；**下一步先收集真实项目的领域/规模/痛点**）
 
 ## DDD 课可复用的锚点
 - 用户已熟的示例词汇：`Order` / `OrderRepository` / `SqlOrderRepository` / `EventPublisher` / ACL

@@ -22,6 +22,15 @@
 - [Article: "Development Sequence" — Juan M. Garrido de Paz（Hexagonal Me）](https://jmgarridopaz.github.io/content/hexagonalarchitecture-ig/chapter3.html)
   Cockburn 开发顺序的 S1–S5 矩阵（合著者整理）：S2 = 孤立六边形 = 主目标。
   Use for: 第 4 课测试策略；与 2005 原文 FIT+mock 对照。
+- [Article: "The Clean Architecture" — Robert C. Martin（2012 原文）](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+  Clean Architecture 的原始公开文章：Dependency Rule、Entities、Use Cases、Interface Adapters、跨边界数据。
+  Use for: 第 5 课与 Hexagonal 对比；评审内圈引用外圈名称或数据格式的泄漏。
+- [Article: "The Onion Architecture: part 1" — Jeffrey Palermo（2008 原文）](https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/)
+  Onion Architecture 命名者的原文：Domain Model 居中、耦合朝中心、Repository 接口靠内、基础设施与测试在外。
+  Use for: 第 5 课区分「领域居中」观察轴与 Hexagonal 的「参与者对话」观察轴。
+- [Article: "Presentation Domain Data Layering" — Martin Fowler（2015）](https://martinfowler.com/bliki/PresentationDomainDataLayering.html)
+  传统分层的价值、常见自上而下依赖方向，以及用 mapper 让 domain 不依赖 data source 的变体。
+  Use for: 第 5 课避免把传统分层做成稻草人；按复杂度与变化压力讨论取舍。
 - 本地：`~/learning/learning-ddd/reference/DDD_Reference_2015-03.pdf`（Evans DDD Reference, CC BY 4.0）
   Use for: 六边形内部（领域/应用）术语与 DDD 课衔接时的定义出处。
 

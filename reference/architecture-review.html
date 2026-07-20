@@ -1,0 +1,65 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>架构对比评审速查</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .ref-wrap { overflow-x: auto; }
+  table.ref { border-collapse: collapse; width: 100%; margin: 1.25rem 0; font-size: 0.86rem; }
+  table.ref th, table.ref td { border: 1px solid var(--rule); padding: 0.5rem 0.65rem; text-align: left; vertical-align: top; }
+  table.ref th { background: var(--card-bg); font-family: -apple-system, "PingFang SC", sans-serif; font-size: 0.8rem; }
+  .formula { font-size: 1.05rem; text-align: center; letter-spacing: 0.02em; }
+</style>
+
+<article>
+  <p class="kicker">Reference · Architecture Review</p>
+  <h1>架构对比评审速查</h1>
+  <p class="lede">别问「它到底是哪一派？」先问「业务政策依赖谁、边界对话如何被替换、证据在哪里？」</p>
+
+  <div class="card formula">
+    <p><strong>静态证据</strong>（源码依赖向内） + <strong>动态证据</strong>（S2 孤立回归） &gt; 架构图与目录名</p>
+  </div>
+
+  <h2>四张地图，一组共同问题</h2>
+  <div class="ref-wrap">
+  <table class="ref">
+    <tr><th>地图</th><th>观察轴</th><th>独有抓手</th><th>典型风险</th></tr>
+    <tr><td>Hexagonal</td><td>跨边界的对话</td><td>driving / driven；ports / adapters；无 UI/DB 测试</td><td>端口按技术命名；左右对调；无法 S2</td></tr>
+    <tr><td>Clean</td><td>政策与机制的圈层</td><td>Dependency Rule；Entities / Use Cases；边界数据转换</td><td>内圈引用框架类名或外部 DTO</td></tr>
+    <tr><td>Onion</td><td>领域模型居中</td><td>Domain Model 只依赖自身；基础设施与测试在外围</td><td>仓储实现或 ORM 模型渗入领域</td></tr>
+    <tr><td>传统分层</td><td>按职责纵向分层</td><td>Presentation → Domain → Data Source</td><td>传递耦合令业务离不开数据库</td></tr>
+  </table>
+  </div>
+
+  <h2>六步评审</h2>
+  <ol>
+    <li>选一个具体业务变化，不从目录树开始。</li>
+    <li>追编译依赖：SQL、HTTP、框架 DTO、容器是否进入核心？</li>
+    <li>找边界对话：谁先开口？应用需要谁回答或收通知？</li>
+    <li>做替换测试：换 UI / DB 是否只改适配器和组装根？</li>
+    <li>找 S2 证据：规则能否无 UI、无真库经驱动端口回归？</li>
+    <li>按变化压力决定是否值得引入更多抽象。</li>
+  </ol>
+
+  <h2>可直接使用的评审句式</h2>
+  <ul>
+    <li><strong>依赖泄漏：</strong>「业务用例引用了 ___ 技术类型，因此 ___ 规则无法在 ___ 条件下隔离运行。」</li>
+    <li><strong>边界含糊：</strong>「这里按 ___ 技术拆接口，而不是按 ___ 业务对话，替换技术会迫使端口变化。」</li>
+    <li><strong>测试缺口：</strong>「当前只有 S5 接线验证，没有 S2 规则回归；___ 故障会让业务测试一起失败。」</li>
+    <li><strong>不过度设计：</strong>「该模块变化低、规则薄；目前清楚分层已足够，先保留接缝，等 ___ 压力出现再反转。」</li>
+  </ul>
+
+  <h2>30 秒判据</h2>
+  <p>看一条核心业务规则：<strong>它是否能在不加载 UI、数据库客户端和框架 DTO 的情况下被编译与测试？</strong>
+  若不能，沿第一个外部类型反向追，就是最可能的泄漏点。</p>
+
+  <footer class="lesson-footer">
+    <p>一手资料：
+      <a href="https://alistair.cockburn.us/hexagonal-architecture">Cockburn, Hexagonal Architecture</a> ·
+      <a href="https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html">Martin, The Clean Architecture</a> ·
+      <a href="https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/">Palermo, Onion Architecture</a> ·
+      <a href="https://martinfowler.com/bliki/PresentationDomainDataLayering.html">Fowler, Presentation Domain Data Layering</a></p>
+    <p><a href="../lessons/0005-review-the-architecture.html">← 回第 5 课</a> ·
+       <a href="hexagon-map.html">六边形速查地图</a> ·
+       <a href="../index.html">课程首页</a></p>
+  </footer>
+</article>
