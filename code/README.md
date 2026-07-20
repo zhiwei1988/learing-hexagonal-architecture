@@ -5,6 +5,7 @@ Every C++ snippet shown in a lesson must compile and pass its assertions here fi
 ```sh
 c++ -std=c++20 -Wall -Wextra -o lesson1_check lesson1_check.cc && ./lesson1_check
 c++ -std=c++20 -Wall -Wextra -o lesson2_ports lesson2_ports.cc && ./lesson2_ports
+c++ -std=c++20 -Wall -Wextra -o lesson3_composition lesson3_composition.cc && ./lesson3_composition
 ```
 
 Convention (inherited from the DDD course): green assertions are evidence, not

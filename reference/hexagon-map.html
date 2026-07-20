@@ -84,7 +84,12 @@
     <tr>
       <td><strong>配置式依赖<br>Configurable Dependency</strong></td>
       <td>用哪个适配器，在应用<strong>外部</strong>（组装根）决定并插入，内部只见端口。</td>
-      <td>第 3 课展开。C++ 里即「构造函数收端口引用/智能指针」。</td>
+      <td>换替身不必改应用源码。C++：构造函数收 <code>ForX&amp;</code>。</td>
+    </tr>
+    <tr>
+      <td><strong>组装根<br>Composition Root<br>（configurator）</strong></td>
+      <td>靠近入口、唯一创建具体适配器并完成接线的位置（<code>main</code> / 测试 setup）。</td>
+      <td>详见 <a href="composition-root.html">组装根速查</a>。口诀：组装根拥有，应用借用。</td>
     </tr>
   </table>
   </div>
@@ -114,7 +119,8 @@
   <footer class="lesson-footer">
     <p>出处：<a href="https://alistair.cockburn.us/hexagonal-architecture">Cockburn, "Hexagonal Architecture" (2005)</a> ·
     <a href="https://www.amazon.com/Hexagonal-Architecture-Explained-Alistair-Cockburn/dp/173751978X"><em>Hexagonal Architecture Explained</em> (2024)</a> ·
-    C++ 可编译证据：<code>code/lesson1_check.cc</code> · <code>code/lesson2_ports.cc</code></p>
+    C++ 可编译证据：<code>code/lesson1_check.cc</code> · <code>code/lesson2_ports.cc</code> ·
+    <code>code/lesson3_composition.cc</code></p>
     <p><a href="../index.html">← 返回课程首页</a></p>
   </footer>
 </article>

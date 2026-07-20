@@ -15,7 +15,7 @@
   <p class="kicker">Learning Workspace</p>
   <h1>六边形架构（Ports &amp; Adapters）</h1>
   <p class="lede">DDD 课续篇 · 目标：能讲清、能评审、能把现有 C++ 项目掰成六边形。</p>
-  <div class="progress"><div class="bar" style="width:33%"></div></div>
+  <div class="progress"><div class="bar" style="width:50%"></div></div>
 
   <table class="toc">
     <tr><td class="num">01</td>
@@ -24,7 +24,9 @@
     <tr><td class="num">02</td>
         <td><a href="lessons/0002-port-granularity-and-naming.html">端口的粒度与命名：一段有目的的对话</a><br>
         <small>purposeful conversation · 典型 2–4 个 · 按意图不按技术</small></td></tr>
-    <tr><td class="num">03</td><td class="todo">配置式依赖与组装根（待开课）</td></tr>
+    <tr><td class="num">03</td>
+        <td><a href="lessons/0003-composition-root.html">配置式依赖与组装根：谁有权 new Postgres</a><br>
+        <small>configurator · Composition Root · 组装根拥有 / 应用借用</small></td></tr>
     <tr><td class="num">04</td><td class="todo">测试策略：test-to-test-double（待开课）</td></tr>
     <tr><td class="num">05</td><td class="todo">对比评审：Hexagonal vs Clean vs Onion（待开课）</td></tr>
     <tr><td class="num">06+</td><td class="todo">迁移弧：把现有项目掰成六边形（待开课，先聊你的真实项目）</td></tr>
@@ -33,6 +35,7 @@
   <h2>速查</h2>
   <p><a href="reference/hexagon-map.html">六边形速查地图</a> —— 全景图、核心定义、DDD 三层映射、常见误读。</p>
   <p><a href="reference/port-conversations.html">端口对话速查</a> —— 粒度两极端、命名合格/不合格、30 秒自检。</p>
+  <p><a href="reference/composition-root.html">组装根速查</a> —— 谁知道具体类型、C++ 所有权、30 秒自检。</p>
 
   <h2>恢复方式</h2>
   <p>在本目录对 Claude 说 <code>/teach 六边形架构</code> 即可继续。上次进度看 <code>NOTES.md</code> 路线草图；做过的题的反馈记得带上（答错哪几道 + 选了哪个）。</p>

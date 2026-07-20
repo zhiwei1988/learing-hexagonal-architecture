@@ -1,0 +1,96 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>组装根速查 · Composition Root</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .rule-grid { display: grid; gap: 0.75rem; margin: 1.25rem 0; }
+  @media (min-width: 700px) { .rule-grid { grid-template-columns: 1fr 1fr; } }
+  .rule-card { border: 1px solid var(--rule); border-radius: 10px; padding: 0.85rem 1rem; background: var(--card-bg); }
+  .rule-card h4 { margin: 0 0 0.35rem; font-size: 0.9rem; font-family: -apple-system, "PingFang SC", sans-serif; }
+  .rule-card.bad { border-color: var(--bad); }
+  .rule-card.good { border-color: var(--good); }
+  .rule-card ul { margin: 0.35rem 0 0; padding-left: 1.1rem; font-size: 0.88rem; }
+  table.ref { border-collapse: collapse; width: 100%; margin: 1.25rem 0; font-size: 0.9rem; }
+  table.ref th, table.ref td { border: 1px solid var(--rule); padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
+  table.ref th { background: var(--card-bg); font-family: -apple-system, "PingFang SC", sans-serif; font-size: 0.82rem; }
+  .ref-wrap { overflow-x: auto; }
+</style>
+
+<article>
+  <p class="kicker">Reference · 六边形架构</p>
+  <h1>组装根速查</h1>
+  <p class="lede">谁有权知道 <code>PostgresOrderStore</code>？——只有组装根。
+  定义对齐 Cockburn 的 <em>configurator</em> 与 Seemann 的 Composition Root。</p>
+
+  <h2 id="def">一句话</h2>
+  <p><strong>组装根（Composition Root / configurator）</strong>是应用入口附近、
+  <em>唯一</em>把具体适配器插进端口的地方。六边形内部只见端口，不见技术类名。</p>
+
+  <h2 id="who">谁在哪一侧知道什么</h2>
+  <div class="ref-wrap">
+  <table class="ref">
+    <tr><th>角色</th><th>可以知道</th><th>绝不可以</th></tr>
+    <tr>
+      <td>应用（六边形内）</td>
+      <td>端口接口（<code>ForStoringOrders&amp;</code>）</td>
+      <td><code>new PostgresOrderStore</code>、<code>#include &lt;libpq&gt;</code>、服务定位器</td>
+    </tr>
+    <tr>
+      <td>适配器</td>
+      <td>自己实现的端口 + 一种技术</td>
+      <td>替应用做用例编排；持有别的适配器当「朋友」</td>
+    </tr>
+    <tr>
+      <td>组装根（<code>main</code> / 测试 setup）</td>
+      <td>全部具体适配器类型，并完成接线</td>
+      <td>业务规则（算税、校验订单……那是应用的事）</td>
+    </tr>
+  </table>
+  </div>
+
+  <h2 id="cpp">C++ 所有权口诀</h2>
+  <div class="rule-grid">
+    <div class="rule-card good">
+      <h4>组装根拥有 · 应用借用</h4>
+      <ul>
+        <li><code>unique_ptr&lt;PostgresOrderStore&gt;</code> 或栈对象在 <code>main</code></li>
+        <li>应用构造函数收 <code>ForStoringOrders&amp;</code></li>
+        <li>适配器寿命 ≥ 应用使用期</li>
+      </ul>
+    </div>
+    <div class="rule-card bad">
+      <h4>应用自己 new 适配器</h4>
+      <ul>
+        <li>技术名漏进六边形内部</td>
+        <li>测试无法在不改源码的情况下换替身</td>
+        <li>与 Cockburn intent「equally driven / swapped」直接冲突</td>
+      </ul>
+    </div>
+  </div>
+
+  <h2 id="two">两种接线方式（Cockburn 2023）</h2>
+  <ol>
+    <li><strong>构造函数 / setter 注入（DI）</strong>——本课默认；C++ 手工组装首选。</li>
+    <li><strong>Broker / 依赖查找（Lookup）</strong>——应用向 broker 要端口实现；broker 仍由组装根配置。
+    别把 lookup 撒进领域对象。</li>
+  </ol>
+  <p>Mission 约束：先掌握手工组装，不上 DI 框架。框架若出现，也只能待在组装根里
+  （Seemann：容器只被 Composition Root 引用）。</p>
+
+  <h2 id="check">30 秒自检</h2>
+  <ol>
+    <li>搜应用源码：有没有 <code>Postgres</code> / <code>libpq</code> / <code>Kafka</code>？有 → 泄漏。</li>
+    <li><code>main</code>（或测试 setup）之外还有没有 <code>make_unique&lt;某适配器&gt;</code>？有 → 组装根不唯一。</li>
+    <li>换测试替身要不要改应用 <code>.cc</code>？要 → 依赖不是配置式的。</li>
+  </ol>
+
+  <footer class="lesson-footer">
+    <p>出处：
+    <a href="https://alistaircockburn.com/Hexagonal%20Budapest%2023-05-18.pdf">Cockburn Budapest 2023 · The configurator</a> ·
+    <a href="https://blog.ploeh.dk/2011/07/28/CompositionRoot/">Seemann, Composition Root</a> ·
+    <a href="https://alistair.cockburn.us/hexagonal-architecture">Cockburn 2005 · Dependency Injection</a></p>
+    <p>证据：<code>code/lesson3_composition.cc</code> ·
+    课：<a href="../lessons/0003-composition-root.html">第 3 课</a> ·
+    <a href="../index.html">← 课程首页</a></p>
+  </footer>
+</article>

@@ -1,0 +1,237 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 3 课 · 配置式依赖与组装根</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .wire { display: grid; gap: 0.75rem; margin: 1.25rem 0; }
+  @media (min-width: 700px) { .wire { grid-template-columns: 1fr 1fr; } }
+  .wire-card { border: 1px solid var(--rule); border-radius: 10px; padding: 0.85rem 1rem; background: var(--card-bg); }
+  .wire-card h4 { margin: 0 0 0.35rem; font-size: 0.9rem; font-family: -apple-system, "PingFang SC", sans-serif; }
+  .wire-card.bad { border-color: var(--bad); }
+  .wire-card.good { border-color: var(--good); }
+  .wire-card pre { margin: 0.5rem 0 0; font-size: 0.78rem; }
+  .own { font-size: 0.85rem; color: var(--ink-soft); margin: 0.4rem 0 0; }
+</style>
+
+<article>
+  <p class="kicker">六边形架构 · 第 3 课</p>
+  <h1>配置式依赖与组装根：谁有权 new Postgres</h1>
+  <p class="lede">端口画好了。下一问：<strong>谁把适配器插进去？</strong>
+  答错会让六边形塌回「应用里直接 <code>new</code> 数据库」——分层课你刚逃离的地方。</p>
+
+  <div class="card">
+    <p><strong>你在地图上的位置</strong>：本课钉死<a href="../reference/hexagon-map.html#defs">速查地图</a>里
+    「配置式依赖」那一格，并补上<a href="../reference/composition-root.html">组装根速查</a>。
+    上一课软点——「技术词贴哪一侧」——课首复验。</p>
+  </div>
+
+  <h2>回顾检查</h2>
+  <p>两题：一道钉「技术类名出现在哪一侧才合格」；一道钉「端口按意图命名」。选项字数对齐。</p>
+  <div id="review"></div>
+
+  <h2>配置式依赖：适配器在外部决定</h2>
+  <blockquote>
+    You get to replace production connections with test harnesses, and back again,
+    without changing the source code.
+    <span class="zh">你可以把生产连接换成测试线束，再换回来——<strong>不必改应用源码</strong>。</span>
+    <cite>—— Alistair Cockburn,
+    <a href="https://alistaircockburn.com/Hexagonal%20Budapest%2023-05-18.pdf">Budapest 2023 · Benefits</a></cite>
+  </blockquote>
+  <p>2005 原文把这件事挂在
+  <a href="https://alistair.cockburn.us/hexagonal-architecture">Dependency Inversion / Injection</a> 上：
+  高模块不依赖低模块，双方依赖抽象；具体适配器可替换。近年他给接线角色起了名字：
+  <strong>configurator</strong>（配置器）。</p>
+  <p>同一角色在 DI 文献里叫
+  <a href="https://blog.ploeh.dk/2011/07/28/CompositionRoot/">Composition Root</a>（组装根）：
+  「应用中（最好唯一的）把模块组装到一起的位置——越靠近入口越好。」
+  控制台程序里，那就是 <code>main</code>；测试里，那就是测试 setup。两者特权相同。</p>
+
+  <h2>组装根：唯一知道具体类型的地方</h2>
+  <div class="wire">
+    <div class="wire-card good">
+      <h4>合格 · 组装根接线</h4>
+<pre>auto store = std::make_unique&lt;PostgresOrderStore&gt;();
+PlaceOrderApp app(*store);          // port ref in
+int id = app.place("SKU-1");        // use at driving port</pre>
+      <p class="own"><code>Postgres…</code> 只出现在 <code>main</code> / 测试里。应用源码搜不到。</p>
+    </div>
+    <div class="wire-card bad">
+      <h4>不合格 · 应用自己 new</h4>
+<pre>class PlaceOrderApp {
+  PostgresOrderStore store_;   // tech inside
+  PlaceOrderApp() : store_() {}
+};</pre>
+      <p class="own">换替身必须改应用源码 → 配置式依赖宣告死亡。</p>
+    </div>
+  </div>
+
+  <p>Cockburn 展示了两种接线手法：<strong>构造函数/setter 注入</strong>，以及
+  <strong>broker 查找</strong>。本课与 mission 一致：先手工构造函数注入，不上 DI 容器。
+  容器若日后出现，也只能待在组装根——别处不许 <code>#include</code> 容器头。</p>
+
+  <h2>C++：组装根拥有，应用借用</h2>
+  <p><code>code/lesson3_composition.cc</code>（clang / <code>-std=c++20 -Wall -Wextra</code> 零告警）。
+  同一 <code>PlaceOrderApp</code> 类型，被两个组装根分别插入生产形适配器与内存替身：</p>
+
+<pre><code>class PlaceOrderApp final : public ForPlacingOrders {
+ public:
+  explicit PlaceOrderApp(ForStoringOrders&amp; store)  // borrow, don't own
+      : store_(store), next_id_(1) {}
+  // …
+ private:
+  ForStoringOrders&amp; store_;
+};
+
+void compose_production() {
+  auto store = std::make_unique&lt;PostgresOrderStore&gt;();  // root OWNS
+  PlaceOrderApp app(*store);
+  assert(app.place("SKU-PROD") == 1);
+}
+
+void compose_test() {
+  InMemoryOrderStore store;   // test entry = also a composition root
+  PlaceOrderApp app(store);
+  assert(app.place("SKU-TEST") == 1);
+}</code></pre>
+
+  <p>口诀：<strong>组装根拥有，应用借用</strong>。应用构造函数收端口引用（或非拥有指针），
+  绝不 <code>new</code> 适配器。适配器寿命由组装根保证 ≥ 应用使用期——这是 C++ 里把
+  「可配置依赖」钉死的方式，不是风格偏好。</p>
+  <p>顺带复验第 2 课软点：<code>PostgresOrderStore</code> 这个<strong>技术类名</strong>
+  出现在适配器 / 组装根上完全合格；若它出现在端口 typedef 或应用成员类型上，才坏。</p>
+
+  <h2>练一练：这句话该谁说？</h2>
+  <p>判断每条职责属于哪一类。选项字数对齐，别靠长短猜。</p>
+  <div id="sort"></div>
+
+  <h2>试一试</h2>
+  <div id="quiz"></div>
+
+  <h2>下一课 &amp; 主读物</h2>
+  <p>下一课：<strong>测试策略</strong>——驱动侧进、被驱动侧换替身；test-to-test-double 矩阵。</p>
+  <p>主读物：Cockburn Budapest 2023 PDF 里
+  <a href="https://alistaircockburn.com/Hexagonal%20Budapest%2023-05-18.pdf">"The configurator"</a>
+  与 Tax Calculator 接线那几页（约 8 分钟）；对照本课 <code>compose_production</code> /
+  <code>compose_test</code>。成书版见
+  <a href="https://www.amazon.com/Hexagonal-Architecture-Explained-Alistair-Cockburn/dp/173751978X"><em>Hexagonal Architecture Explained</em></a>。
+  组装根定义的交叉印证：
+  <a href="https://blog.ploeh.dk/2011/07/28/CompositionRoot/">Seemann, Composition Root</a>。</p>
+
+  <footer class="lesson-footer">
+    <p>本课共 <strong>3 个计分区</strong>：回顾检查（2 题）、练一练（8 题）、试一试（5 题）。
+    做完告诉我<strong>答错了哪几道、当时选的是哪个</strong>，全对就说「全对」。</p>
+    <p>任何一处没讲透——直接在会话里问我，我是你的老师，这页只是讲义。</p>
+    <p><a href="../index.html">课程首页</a> ·
+       <a href="../reference/composition-root.html">组装根速查</a> ·
+       <a href="../reference/hexagon-map.html">六边形速查地图</a> ·
+       代码：<code>code/lesson3_composition.cc</code> ·
+       <a href="0002-port-granularity-and-naming.html">← 第 2 课</a></p>
+  </footer>
+</article>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/categorize.js"></script>
+<script>
+  renderQuiz(document.getElementById("review"), [
+    {
+      stem: "类名 PostgresOrderStore（内部用 libpq）——它出现在哪才合格？",
+      options: [
+        "适配器或组装根——技术名贴在实现侧",
+        "被驱动端口 typedef——标明对话用 Postgres",
+        "应用类的成员类型——方便直接调用驱动",
+      ],
+      answer: 0,
+      explain: "第 2 课软点的另一半：技术词贴适配器（及唯一创建它的组装根）合格；贴端口名或应用成员类型才坏。lesson3 里 PostgresOrderStore 只出现在 compose_production。",
+    },
+    {
+      stem: "端口 ForStoringOrders 与适配器 SqlOrderRepository，命名原则是？",
+      options: [
+        "端口按意图，适配器可带技术词",
+        "两端都按数据库品牌命名对齐",
+        "端口按技术，适配器只写意图名",
+      ],
+      answer: 0,
+      explain: "对话目的进端口；电缆材料进适配器。SqlOrderRepository 是合格适配器名，不是『按技术命名的坏端口』。",
+    },
+  ], {
+    perfect: "技术词贴哪一侧清楚了。进入本课主线：谁有权 new 它。",
+    imperfect: "错在『技术名=坏』一刀切的，重读解释：坏的是贴端口/应用内部，不是贴适配器。",
+  });
+
+  renderCategorize(document.getElementById("sort"), {
+    buckets: ["组装根该做", "应用内部该做", "泄漏 / 坏味道"],
+    items: [
+      { text: "main() 里 make_unique<PostgresOrderStore>，再传给 PlaceOrderApp", bucket: 0,
+        explain: "经典组装根：入口处创建具体适配器并注入。Cockburn 的 configurator。" },
+      { text: "PlaceOrderApp::place 里校验 sku 非空，再调用 store_.save", bucket: 1,
+        explain: "用例/业务编排在六边形内部。它只通过端口说话，不创建适配器。" },
+      { text: "应用构造函数里 new PostgresOrderStore() 当作默认仓储", bucket: 2,
+        explain: "技术名与寿命决策漏进应用——配置式依赖死亡，测试无法无源码替换。" },
+      { text: "测试 setup 创建 InMemoryOrderStore，注入同一个 PlaceOrderApp", bucket: 0,
+        explain: "测试入口同样是组装根（Seemann：靠近入口）。特权与 main 相同。" },
+      { text: "领域实体 Order.cpp 里 #include <libpq-fe.h> 直接 INSERT", bucket: 2,
+        explain: "基础设施泄漏进领域。端口/适配器形同虚设。" },
+      { text: "应用通过 ForStoringOrders& 成员调用 save/load，不持有具体类型", bucket: 1,
+        explain: "借用端口引用——lesson3 的所有权口诀『应用借用』。" },
+      { text: "在计价领域服务里写 ServiceLocator::repo() 取全局仓储", bucket: 2,
+        explain: "查找散落在内部=隐式组装。broker 若存在，只能由组装根配置，不能渗进领域。" },
+      { text: "compose() 里先造 FixedTaxRateRepository，再 new TaxCalculator(repo)", bucket: 0,
+        explain: "Cockburn Budapest 幻灯原例：configurator 接线，然后在驱动端口上使用系统。" },
+    ],
+    perfect: "三道边界清楚：创建接线归组装根，业务归应用，技术名不准进六边形。",
+    imperfect: "错的那条对照三桶重读——问『这句话出现在应用 .cc 里，换替身还要不要改它』。",
+  });
+
+  renderQuiz(document.getElementById("quiz"), [
+    {
+      stem: "Cockburn 把「把适配器插进端口」的角色叫作？",
+      options: [
+        "领域服务（Domain Service）",
+        "配置器 / 组装根（configurator）",
+        "被驱动端口（Driven Port）",
+      ],
+      answer: 1,
+      explain: "Budapest 2023 明确标出 the configurator，并注明 aka Composition Root。它不是端口，也不是领域服务。",
+    },
+    {
+      stem: "组装根最该放在哪里？",
+      options: [
+        "每个仓储类自己的静态工厂里",
+        "尽量靠近应用入口（main / 测试）",
+        "领域模型基类的虚函数默认实现里",
+      ],
+      answer: 1,
+      explain: "Seemann：As close as possible to the application's entry point。库本身不该有组装根。",
+    },
+    {
+      stem: "本课 C++ 所有权口诀是？",
+      options: [
+        "组装根拥有适配器，应用借用端口",
+        "应用拥有适配器，组装根只负责调用",
+        "端口与适配器都用 shared_ptr 共享所有权",
+      ],
+      answer: 0,
+      explain: "lesson3_composition.cc：unique_ptr/栈在 compose_*，PlaceOrderApp 只持 ForStoringOrders&。shared_ptr 不是本课要求，也常掩盖寿命边界。",
+    },
+    {
+      stem: "换掉生产库为内存替身，却必须改 PlaceOrderApp.cc——说明？",
+      options: [
+        "驱动端口粒度太大，应再拆用例",
+        "依赖不是配置式的，具体类型漏进了应用",
+        "被驱动侧不能使用测试替身适配器",
+      ],
+      answer: 1,
+      explain: "Benefit 原文：without changing the source code。改应用才能换适配器=组装根职责被应用吞掉了。",
+    },
+    {
+      stem: "Mission 现阶段对 DI 框架的态度是？",
+      options: [
+        "先手工组装；框架若用也只留在组装根",
+        "尽快引入容器，让领域直接 Resolve",
+        "禁止一切注入，应用自行 new 适配器",
+      ],
+      answer: 0,
+      explain: "MISSION Out of scope：先掌握手工组装。Seemann 补充：容器只被 Composition Root 引用，别处零引用。",
+    },
+  ]);
+</script>
