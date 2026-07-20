@@ -1,0 +1,74 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>测试矩阵速查 · Test-to-Test-Double</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  table.ref { border-collapse: collapse; width: 100%; margin: 1.25rem 0; font-size: 0.88rem; }
+  table.ref th, table.ref td { border: 1px solid var(--rule); padding: 0.45rem 0.65rem; text-align: left; vertical-align: top; }
+  table.ref th { background: var(--card-bg); font-family: -apple-system, "PingFang SC", sans-serif; font-size: 0.8rem; }
+  table.ref td.goal { background: var(--good-bg); }
+  .ref-wrap { overflow-x: auto; }
+  .pair { display: grid; gap: 0.75rem; margin: 1.25rem 0; }
+  @media (min-width: 700px) { .pair { grid-template-columns: 1fr 1fr; } }
+  .pair .card-ish { border: 1px solid var(--rule); border-radius: 10px; padding: 0.85rem 1rem; background: var(--card-bg); }
+  .pair h4 { margin: 0 0 0.35rem; font-size: 0.9rem; font-family: -apple-system, "PingFang SC", sans-serif; }
+</style>
+
+<article>
+  <p class="kicker">Reference · 六边形架构</p>
+  <h1>测试矩阵速查</h1>
+  <p class="lede">左测进、右替身。矩阵来自 Cockburn 的开发顺序（合著者
+  <a href="https://jmgarridopaz.github.io/content/hexagonalarchitecture-ig/chapter3.html">Juan M. Garrido de Paz</a> 整理）。</p>
+
+  <h2 id="asymmetry">左右不对称（自然配对）</h2>
+  <div class="pair">
+    <div class="card-ish">
+      <h4>驱动侧 · 测试线束</h4>
+      <p>替<strong>主参与者</strong>：脚本/用例通过驱动端口唤醒应用。
+      Cockburn 原文自然例子是 FIT / FitNesse。</p>
+    </div>
+    <div class="card-ish">
+      <h4>被驱动侧 · 测试替身</h4>
+      <p>替<strong>次参与者</strong>：答查询或记录通知。
+      原文自然例子是 mock / in-memory 仓储。</p>
+    </div>
+  </div>
+  <blockquote>
+    The natural test adapter to substitute for a primary actor is FIT… The natural
+    test adapter to substitute for a secondary actor such as a database is a mock…
+    <span class="zh">替主参与者的自然测试适配器是 FIT；替次参与者（如数据库）的是 mock。</span>
+    <cite>—— <a href="https://alistair.cockburn.us/hexagonal-architecture">Cockburn 2005 · Use of FIT and Mocks</a></cite>
+  </blockquote>
+
+  <h2 id="matrix">开发顺序矩阵（S1–S5）</h2>
+  <div class="ref-wrap">
+  <table class="ref">
+    <tr><th>阶段</th><th>驱动侧</th><th>六边形（应用）</th><th>被驱动侧</th></tr>
+    <tr><td><strong>S1</strong></td><td>测试用例</td><td>硬编码</td><td>—</td></tr>
+    <tr><td class="goal"><strong>S2</strong> ★</td><td class="goal">测试用例</td><td class="goal">真实</td><td class="goal">测试替身</td></tr>
+    <tr><td><strong>S3</strong></td><td>真实适配器</td><td>真实</td><td>测试替身</td></tr>
+    <tr><td><strong>S4</strong></td><td>测试用例</td><td>真实</td><td>真实适配器</td></tr>
+    <tr><td><strong>S5</strong></td><td>真实</td><td>真实</td><td>真实</td></tr>
+  </table>
+  </div>
+  <p><strong>S2 是主目标</strong>：业务逻辑可在与真实设备隔离的情况下被测完。
+  「单元 / 集成 / E2E」叫什么不重要——重要的是<strong>能不能孤立测业务</strong>
+  （Juan 原文明确把测试分类术语排除在范围外）。</p>
+
+  <h2 id="check">30 秒自检</h2>
+  <ol>
+    <li>这条测试是从<strong>驱动端口</strong>进的，还是在摸 UI/HTTP 细节？</li>
+    <li>被驱动侧插的是替身还是真库？——决定你在 S2 还是 S4。</li>
+    <li>换掉 SMTP/Postgres，这条断言还成立吗？成立 → 你测的是六边形，不是电缆。</li>
+  </ol>
+
+  <footer class="lesson-footer">
+    <p>出处：
+    <a href="https://jmgarridopaz.github.io/content/hexagonalarchitecture-ig/chapter3.html">Juan — Development Sequence</a> ·
+    <a href="https://alistair.cockburn.us/hexagonal-architecture">Cockburn 2005</a> ·
+    成书 <a href="https://www.amazon.com/Hexagonal-Architecture-Explained-Alistair-Cockburn/dp/173751978X"><em>Hexagonal Architecture Explained</em></a> 测试章节</p>
+    <p>证据：<code>code/lesson4_isolation.cc</code>（S2） ·
+    课：<a href="../lessons/0004-test-to-test-double.html">第 4 课</a> ·
+    <a href="../index.html">← 课程首页</a></p>
+  </footer>
+</article>

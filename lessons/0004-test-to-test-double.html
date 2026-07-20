@@ -1,0 +1,233 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 4 课 · 测试策略：左测进、右替身</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  table.matrix { border-collapse: collapse; width: 100%; margin: 1.25rem 0; font-size: 0.88rem; }
+  table.matrix th, table.matrix td { border: 1px solid var(--rule); padding: 0.45rem 0.65rem; text-align: left; }
+  table.matrix th { background: var(--card-bg); font-family: -apple-system, "PingFang SC", sans-serif; font-size: 0.8rem; }
+  table.matrix tr.goal td { background: var(--good-bg); }
+  .asym { display: grid; gap: 0.75rem; margin: 1.25rem 0; }
+  @media (min-width: 700px) { .asym { grid-template-columns: 1fr 1fr; } }
+  .asym-card { border: 1px solid var(--rule); border-radius: 10px; padding: 0.85rem 1rem; background: var(--card-bg); }
+  .asym-card h4 { margin: 0 0 0.35rem; font-size: 0.9rem; font-family: -apple-system, "PingFang SC", sans-serif; }
+</style>
+
+<article>
+  <p class="kicker">六边形架构 · 第 4 课</p>
+  <h1>测试策略：左测进、右替身</h1>
+  <p class="lede">组装根让你<strong>能</strong>换适配器。这一课回答：换完之后，
+  <strong>测什么、在矩阵的哪一格测</strong>——以及为什么 S2 才是六边形的主目标。</p>
+
+  <div class="card">
+    <p><strong>你在地图上的位置</strong>：本课钉死
+    <a href="../reference/test-matrix.html">测试矩阵速查</a>。
+    上一课组装权责已稳——课首只抽「换替身要不要改源码」作间隔重复。</p>
+  </div>
+
+  <h2>回顾检查</h2>
+  <p>两题：一道钉配置式依赖；一道钉组装根位置。选项字数对齐。</p>
+  <div id="review"></div>
+
+  <h2>意图原文：没有 UI、没有数据库也能跑</h2>
+  <blockquote>
+    Create your application to work without either a UI or a database so you can run
+    automated regression-tests against the application…
+    <span class="zh">让应用在<strong>既没有 UI 也没有数据库</strong>的情况下仍能工作，
+    以便对它跑自动化回归测试……</span>
+    <cite>—— Alistair Cockburn,
+    <a href="https://alistair.cockburn.us/hexagonal-architecture">"Hexagonal Architecture" (2005)</a> · Intent</cite>
+  </blockquote>
+  <p>这不是「多写几个 mock」的工程技巧——这是模式的<strong>定义性要求</strong>。
+  做不到孤立回归，就还没建成六边形。</p>
+
+  <h2>左右不对称：自然配对</h2>
+  <div class="asym">
+    <div class="asym-card">
+      <h4>驱动侧 ← 测试线束</h4>
+      <p>测试是<strong>第一个用户</strong>（Juan）。它通过驱动端口唤醒应用——
+      与 REST/CLI 走同一扇门。Cockburn 原文自然例子：FIT / FitNesse。</p>
+    </div>
+    <div class="asym-card">
+      <h4>被驱动侧 → 测试替身</h4>
+      <p>答查询（stub）或记录通知（spy）。技术名可以叫
+      <code>InMemoryOrderStore</code>——那是适配器。原文自然例子：mock 数据库。</p>
+    </div>
+  </div>
+  <blockquote>
+    The natural test adapter to substitute for a primary actor is FIT… for a secondary
+    actor such as a database is a mock…
+    <span class="zh">替主参与者 → FIT；替次参与者（数据库）→ mock。</span>
+    <cite>—— 同上，"Use of FIT and Mocks / "Left" and "Right" sides</cite>
+  </blockquote>
+  <p>搞反了就废：用 mock「假装」驱动侧、却让测试去摸真实 SMTP——你测的是电缆，不是对话。</p>
+
+  <h2>开发顺序矩阵（S1–S5）</h2>
+  <p>合著者
+  <a href="https://jmgarridopaz.github.io/content/hexagonalarchitecture-ig/chapter3.html">Juan M. Garrido de Paz</a>
+  按 Cockburn（Agiles2020 等演讲）整理的阶段表：</p>
+  <table class="matrix">
+    <tr><th>阶段</th><th>驱动侧</th><th>六边形</th><th>被驱动侧</th></tr>
+    <tr><td>S1</td><td>测试用例</td><td>硬编码</td><td>—</td></tr>
+    <tr class="goal"><td>S2 ★</td><td>测试用例</td><td>真实</td><td>测试替身</td></tr>
+    <tr><td>S3</td><td>真实适配器</td><td>真实</td><td>测试替身</td></tr>
+    <tr><td>S4</td><td>测试用例</td><td>真实</td><td>真实适配器</td></tr>
+    <tr><td>S5</td><td>真实</td><td>真实</td><td>真实</td></tr>
+  </table>
+  <p><strong>S2 之后，六边形（业务逻辑）就算做完了</strong>——可以在与真实设备隔离的情况下测通。
+  Juan 原文：<em>This is the main goal of Hexagonal Architecture.</em>
+  S3 换左（上 CLI/HTTP）、S4 换右（接真库）、S5 全真——都是<strong>在 S2 立住之后</strong>加电缆。</p>
+  <p>不必纠结这条测试该叫「单元」还是「集成」。Juan 明确把测试分类术语踢出范围：
+  重要的是<strong>业务能否孤立被测</strong>。</p>
+
+  <h2>一条绿色断言：S2 现场</h2>
+  <p><code>code/lesson4_isolation.cc</code>（clang / <code>-std=c++20 -Wall -Wextra</code> 零告警）。
+  测试组装根插入两个被驱动替身，再从驱动端口进攻：</p>
+
+<pre><code>InMemoryOrderStore store;     // driven double
+SpyNotifier notifier;         // driven spy (merely-notify port)
+PlaceOrderApp app(store, notifier);
+
+const int id = app.place("SKU-42");   // drive ForPlacingOrders
+assert(id == 1);
+assert(store.load(1).sku == "SKU-42");
+assert(notifier.placed_ == std::vector&lt;int&gt;{1});</code></pre>
+
+  <p>没有 Postgres，没有 SMTP，没有 REST——却断言了业务规则与「通知确实发出」。
+  这就是矩阵里那一格高亮的 S2。</p>
+
+  <h2>练一练：这段测试落在矩阵哪一格？</h2>
+  <p>判断场景属于哪一类。选项字数对齐。</p>
+  <div id="sort"></div>
+
+  <h2>试一试</h2>
+  <div id="quiz"></div>
+
+  <h2>下一课 &amp; 主读物</h2>
+  <p>下一课：<strong>对比评审</strong>——Hexagonal vs Clean vs Onion vs 传统分层（mission「能评审」落点）。</p>
+  <p>主读物：Juan 的
+  <a href="https://jmgarridopaz.github.io/content/hexagonalarchitecture-ig/chapter3.html">Development Sequence</a>
+  （矩阵表 + S1/S2 说明，约 10 分钟）；对照 Cockburn 2005
+  <a href="https://alistair.cockburn.us/hexagonal-architecture">"Use of FIT and Mocks"</a>
+  两段。成书版见
+  <a href="https://www.amazon.com/Hexagonal-Architecture-Explained-Alistair-Cockburn/dp/173751978X"><em>Hexagonal Architecture Explained</em></a>
+  测试相关章节。</p>
+
+  <footer class="lesson-footer">
+    <p>本课共 <strong>3 个计分区</strong>：回顾检查（2 题）、练一练（8 题）、试一试（5 题）。
+    做完告诉我<strong>答错了哪几道、当时选的是哪个</strong>，全对就说「全对」。</p>
+    <p>任何一处没讲透——直接在会话里问我，我是你的老师，这页只是讲义。</p>
+    <p><a href="../index.html">课程首页</a> ·
+       <a href="../reference/test-matrix.html">测试矩阵速查</a> ·
+       <a href="../reference/composition-root.html">组装根速查</a> ·
+       代码：<code>code/lesson4_isolation.cc</code> ·
+       <a href="0003-composition-root.html">← 第 3 课</a></p>
+  </footer>
+</article>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/categorize.js"></script>
+<script>
+  renderQuiz(document.getElementById("review"), [
+    {
+      stem: "把 PostgresOrderStore 换成 InMemoryOrderStore，却必须改 PlaceOrderApp.cc——说明？",
+      options: [
+        "驱动端口粒度过大，应再拆用例",
+        "依赖不是配置式的，具体类型漏进应用",
+        "被驱动侧禁止使用任何测试替身",
+      ],
+      answer: 1,
+      explain: "第 3 课 Benefit：without changing the source code。改应用才能换适配器=组装根职责被吞。",
+    },
+    {
+      stem: "测试 setup 里创建替身并注入应用，这个 setup 的角色是？",
+      options: [
+        "被驱动端口——测试替身的另一种叫法",
+        "组装根——测试入口与 main 特权相同",
+        "领域服务——负责编排用例与持久化",
+      ],
+      answer: 1,
+      explain: "Seemann：组装根靠近入口。测试是另一种入口，同样有权知道具体适配器类型。",
+    },
+  ], {
+    perfect: "组装权责还在。进入本课主线：矩阵上你站在哪一格。",
+    imperfect: "错在『换替身要改应用』的，回第 3 课组装根；错在 setup 角色的，记住测试入口=组装根。",
+  });
+
+  renderCategorize(document.getElementById("sort"), {
+    buckets: ["S2 孤立六边形", "S3 真驱动+替身", "S4 测真被驱动", "搞反 / 坏味道"],
+    items: [
+      { text: "gtest 调 ForPlacingOrders；仓储与通知都是内存替身", bucket: 0,
+        explain: "经典 S2：左测试、右替身、真实应用。lesson4_isolation.cc 就是这一格。" },
+      { text: "HTTP 控制器进真实 PlaceOrderApp；被驱动侧仍是 InMemory", bucket: 1,
+        explain: "S3：换了左边电缆（真驱动适配器），右边仍替身——验证适配器翻译，不碰真库。" },
+      { text: "gtest 调驱动端口；右边插真实 Postgres 测试库", bucket: 2,
+        explain: "S4：测的是真被驱动适配器与库的接线。业务规则应已在 S2 测完。" },
+      { text: "用 mock『假装』PlaceOrder 应用，去单测 REST 控制器的路由表", bucket: 1,
+        explain: "仍属 S3 家族：真/半真驱动适配器 + 被测物外侧用替身（此处替的是六边形）。Juan：S1 硬编码六边形也可拿来测驱动适配器。" },
+      { text: "只起真实 UI + 真实 DB 做手工点点点，没有自动化驱动端口测试", bucket: 3,
+        explain: "跳过 S2。Intent 要求的『无 UI/无 DB 也能回归』从未兑现。" },
+      { text: "测试直接 assert 某封 SMTP 邮件的 MIME 头，从不经过通知端口", bucket: 3,
+        explain: "测电缆细节，且绕过端口。业务通知是否发出应通过驱动端口 + 被驱动 spy（S2）验证。" },
+      { text: "Cucumber/FIT 脚本经驱动端口跑业务；右边全是 mock", bucket: 0,
+        explain: "Cockburn 原文舞台：FIT + mock = 孤立模式。矩阵上就是 S2。" },
+      { text: "业务规则只能在『浏览器点 UI + 连生产库』时断言，没有驱动端口自动化", bucket: 3,
+        explain: "跳过 S2，Intent 落空。S5 生产接线本身没错——错的是从未有过孤立回归。" },
+    ],
+    perfect: "矩阵格子认得清：S2 保业务，S3/S4 加电缆，跳过 S2 是坏味道。",
+    imperfect: "错的那条对照四桶——先问『左是测试还是真适配器、右是替身还是真设备』。",
+  });
+
+  renderQuiz(document.getElementById("quiz"), [
+    {
+      stem: "Cockburn 说替主参与者的自然测试适配器是？",
+      options: [
+        "内存 mock 仓储",
+        "FIT / 测试线束",
+        "生产用的 REST 控制器",
+      ],
+      answer: 1,
+      explain: "原文：primary → FIT；secondary → mock。左右别对调。",
+    },
+    {
+      stem: "Juan 说六边形架构的主目标在哪个阶段达成？",
+      options: [
+        "S2：真实应用 + 双侧测试线束/替身",
+        "S5：生产全真适配器全部接好",
+        "S1：硬编码六边形能让测试变绿",
+      ],
+      answer: 0,
+      explain: "After S2, the hexagon is done… This is the main goal。S5 是部署，不是『业务可孤立测』的完成点。",
+    },
+    {
+      stem: "lesson4_isolation.cc 里 SpyNotifier 属于？",
+      options: [
+        "驱动端口上的测试线束",
+        "被驱动端口上的测试替身",
+        "组装根里的生产适配器",
+      ],
+      answer: 1,
+      explain: "它实现 ForNotifyingCustomers，记录 order_placed——次参与者侧的 spy。驱动侧是 main 里对 app.place 的调用。",
+    },
+    {
+      stem: "一条测试必须连上真实 Postgres 才能断言『库存不足拒单』——通常说明？",
+      options: [
+        "业务规则断言放错了层，本该在 S2 用替身完成",
+        "S2 本来就要求被驱动侧使用真实数据库",
+        "驱动端口只能由 HTTP 适配器调用",
+      ],
+      answer: 0,
+      explain: "拒单是业务规则，应在 S2 用可控替身设定库存状态。真库是 S4 的接线验证，不是规则的唯一舞台。",
+    },
+    {
+      stem: "评审时最快的测试策略自检是？",
+      options: [
+        "统计项目里 mock 框架的调用次数是否够多",
+        "业务规则能否在无 UI、无真库下经驱动端口回归",
+        "是否每个适配器都有对等的 E2E 浏览器用例",
+      ],
+      answer: 1,
+      explain: "回到 Intent 原句。mock 数量与 E2E 覆盖是后果，不是判据。",
+    },
+  ]);
+</script>

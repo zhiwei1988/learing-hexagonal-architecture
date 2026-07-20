@@ -32,11 +32,14 @@
    把「名字含技术词」与「按技术命名（坏）」绑死——`SqlOrderRepository`、`InMemoryOrderStore`
    误判为坏命名，而 `PostgresGateway+RedisGateway` 当端口时反判成适配器。
    实为「技术词贴端口才坏、贴适配器合格」的另一半未立住。详见 learning-records/0003。
-3. ⏳ 配置式依赖与组装根（0003）— 讲义已开课（2026-07-20），待用户交卷。
-   课首回顾已放：`PostgresOrderStore` 出现在哪一侧合格（验 0003）。
-   主线：configurator / Composition Root；C++「组装根拥有，应用借用」；
-   证据 `code/lesson3_composition.cc`；速查 `reference/composition-root.html`。
-4. 测试策略：驱动侧进、被驱动侧换替身；test-to-test-double 矩阵（书第 6 章方向）
+3. ✅ 配置式依赖与组装根（0003）— 回顾/练一练/试一试全对（2026-07-20）。
+   主线立住；0003 软点（技术词贴侧）课首回顾一并结案。详见 learning-records/0004。
+   词汇表 +2: 配置式依赖、组装根。
+4. ✅ 测试策略：左测进、右替身（0004）— 回顾 2/2、练一练 5/8、试一试 4/5（2026-07-20）。
+   主线（左右配对、S2 形态）基本立住。软点：① FIT+mock 误判 S3（测试线束≠真驱动）；
+   ② 主目标误绑 S5；③ mock 六边形测 REST 当成搞反、绕过端口 assert MIME 反当成 S3。
+   详见 learning-records/0005。词汇表 +2: 测试线束/替身、S2。
+   **第 5 课课首回顾确定放**：主目标=S2≠S5；FIT/Cucumber+mock=S2。
 5. 对比评审课：Hexagonal vs Clean vs Onion vs 传统分层（mission「评审」落点）
 6. 迁移弧（多课）：接缝识别 → 特征测试 → 抽第一个端口 → 绞杀式推进
    （mission「改造现有项目」落点；**开课前先问真实项目**）

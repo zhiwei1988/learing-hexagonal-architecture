@@ -19,6 +19,9 @@
 - [Article: "Composition Root" — Mark Seemann (2011)](https://blog.ploeh.dk/2011/07/28/CompositionRoot/)
   组装根定义：靠近应用入口、唯一组装对象图的位置；容器只许出现在此处。
   Use for: 第 3 课与 Cockburn「configurator」交叉印证；评审「DI 容器漏进领域」时的判据。
+- [Article: "Development Sequence" — Juan M. Garrido de Paz（Hexagonal Me）](https://jmgarridopaz.github.io/content/hexagonalarchitecture-ig/chapter3.html)
+  Cockburn 开发顺序的 S1–S5 矩阵（合著者整理）：S2 = 孤立六边形 = 主目标。
+  Use for: 第 4 课测试策略；与 2005 原文 FIT+mock 对照。
 - 本地：`~/learning/learning-ddd/reference/DDD_Reference_2015-03.pdf`（Evans DDD Reference, CC BY 4.0）
   Use for: 六边形内部（领域/应用）术语与 DDD 课衔接时的定义出处。
 

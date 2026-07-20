@@ -3,6 +3,8 @@
 回顾 2/2、试一试 5/5——purposeful conversation、2–4 端口、意图命名、自检问题全部过关。
 练一练 5/8，错第 3、6、7 题，所选依次为「按技术命名」「适配器」「按技术命名」。
 
+Status: soft spot resolved by LR-0004（第 3 课回顾全对）
+
 ## Evidence
 
 三道题的正确答案与用户选择恰好对调：
